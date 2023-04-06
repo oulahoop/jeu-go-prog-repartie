@@ -58,7 +58,8 @@ func InitGame() (g Game) {
 			interval = frameInterval
 		}
 		g.runners[i] = Runner{
-			xpos: start, ypos: 50 + float64(i*20),
+			xpos: start,
+			ypos: 50 + float64(i*20),
 			maxFrameInterval: interval,
 			colorScheme:      0,
 		}
