@@ -37,6 +37,16 @@ func (g *Game) DrawWelcomeScreen(screen *ebiten.Image) {
 	)
 }
 
+// DrawWaitForPlayers displays the waiting screen in the game window
+func (g *Game) DrawWaitForPlayers(screen *ebiten.Image) {
+    ebitenutil.DebugPrintAt(
+        screen,
+        fmt.Sprint("Waiting for players..."),
+        screenWidth/2-60,
+        screenHeight/2-20,
+    )
+}
+
 // DrawSelectScreen displays the runner selection screen in the game window
 func (g *Game) DrawSelectScreen(screen *ebiten.Image) {
 	ebitenutil.DebugPrintAt(
@@ -115,6 +125,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	switch g.state {
 	case StateWelcomeScreen:
 		g.DrawWelcomeScreen(screen)
+    case StateWaitForPlayers:
+		g.DrawWaitForPlayers(screen)
 	case StateChooseRunner:
 		g.DrawSelectScreen(screen)
 	case StateLaunchRun:

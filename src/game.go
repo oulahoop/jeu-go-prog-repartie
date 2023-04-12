@@ -25,11 +25,13 @@ type Game struct {
 	launchStep  int           // Current step in StateLaunchRun state
 	resultStep  int           // Current step in StateResult state
 	getTPS      bool          // Help for debug
+	Client      *Client       // Client for the network game
 }
 
 // These constants define the five possible states of the game
 const (
 	StateWelcomeScreen int = iota // Title screen
+	StateWaitForPlayers           // Waiting for other players
 	StateChooseRunner             // Player selection screen
 	StateLaunchRun                // Countdown before a run
 	StateRun                      // Run

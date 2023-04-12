@@ -28,6 +28,10 @@ func (g *Game) HandleWelcomeScreen() bool {
 	return inpututil.IsKeyJustPressed(ebiten.KeySpace)
 }
 
+// HandleWaitForPlayers waits for the players to join the server
+func (g *Game) HandleWaitForPlayers() bool {
+}
+
 // ChooseRunners loops over all the runners to check which sprite each
 // of them selected
 func (g *Game) ChooseRunners() (done bool) {
@@ -116,6 +120,11 @@ func (g *Game) Update() error {
 		if done {
 			g.state++
 		}
+	case StateWaitForPlayers:
+	    done := g.HandleWaitForPlayers()
+        if done {
+            g.state++
+        }
 	case StateChooseRunner:
 		done := g.ChooseRunners()
 		if done {
