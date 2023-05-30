@@ -41,7 +41,7 @@ func (g *Game) DrawWelcomeScreen(screen *ebiten.Image) {
 func (g *Game) DrawWaitForPlayers(screen *ebiten.Image) {
     ebitenutil.DebugPrintAt(
         screen,
-        fmt.Sprint("Waiting for players..."),
+        fmt.Sprint("Waiting for players... (", g.stateServer, "/4)"),
         screenWidth/2-60,
         screenHeight/2-20,
     )

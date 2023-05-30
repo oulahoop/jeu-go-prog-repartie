@@ -10,7 +10,7 @@ type Client struct {
     conn net.Conn // Connexion avec le serveur
 }
 
-func (g *Game) connectToServer() {
+func (g *Game) ConnectToServer() {
     // Se connecte au serveur sur le port 8080
     conn, err := net.Dial("tcp", "localhost:8080")
     if err != nil {
@@ -18,11 +18,11 @@ func (g *Game) connectToServer() {
         return
     }
     // Lie le client au jeu
-    g.Client = Client{conn: conn}
+    g.Client = &Client{conn: conn}
 
+    // Lance la goroutine qui attend les messages du serveur
     go g.handleConnection()
 
-    defer conn.Close()
 }
 
 func (g *Game) handleConnection() {
@@ -34,8 +34,29 @@ func (g *Game) handleConnection() {
         }
         value := string(buf[:n])
         fmt.Println(value)
-        if value == "4 clients" {
-            g.Client.conn.Write([]byte("4 clients"))
+        if value == "start" {
+            g.stateServer = 4
         }
     }
+}
+
+
+func (g *Game) SendResults() {
+
+    fmt.Println("Sending results (" + string(g.runners[0].runTime.Milliseconds()) + ")")
+    // Results
+    s, ms := GetSeconds(g.runners[0].runTime.Milliseconds())
+
+    // Envoi des résultats au server
+    g.Client.conn.Write([]byte(string(s) + "-" + string(ms)))
+}
+
+func (g *Game) sendRun() {
+    g.Client.conn.Write([]byte("run"))
+}
+
+func (g *Game) finishRun(temps int) {
+    // temps en string
+    tps := fmt.Sprintf("%d", temps)
+    g.Client.conn.Write([]byte(tps))
 }

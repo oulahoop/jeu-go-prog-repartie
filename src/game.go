@@ -26,13 +26,14 @@ type Game struct {
 	resultStep  int           // Current step in StateResult state
 	getTPS      bool          // Help for debug
 	Client      *Client       // Client for the network game
+	stateServer int           // State of the server
 }
 
 // These constants define the five possible states of the game
 const (
 	StateWelcomeScreen int = iota // Title screen
-	StateWaitForPlayers           // Waiting for other players
 	StateChooseRunner             // Player selection screen
+	StateWaitForPlayers           // Waiting for other players
 	StateLaunchRun                // Countdown before a run
 	StateRun                      // Run
 	StateResult                   // Results announcement
@@ -74,5 +75,7 @@ func InitGame() (g Game) {
 		chrono:   time.Now(),
 	}
 
+	// Init the server state
+	g.stateServer = 0
 	return g
 }

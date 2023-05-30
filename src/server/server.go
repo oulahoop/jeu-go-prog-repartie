@@ -43,20 +43,25 @@ func (s *Server) Stop() error {
 
 // Run runs the server
 func (s *Server) Run() error {
+    isFull := false
     for {
-        conn, err := s.listener.Accept()
-        if err != nil {
-            return err
-        }
-        fmt.Println("New client")
-        go s.handleConnection(conn)
+        if !isFull {
+            conn, err := s.listener.Accept()
+            if err != nil {
+                return err
+            }
+            fmt.Println("New client")
+            go s.handleConnection(conn)
 
-        clients = append(clients, Client{conn: conn})
+            clients = append(clients, Client{conn: conn})
 
-        fmt.Println(len(clients))
-        if (len(clients) == 4) {
-            for i := range clients {
-                clients[i].conn.Write([]byte("4 clients"))
+            fmt.Println(len(clients))
+            if (len(clients) == 4) {
+                fmt.Println("All connected, sending start")
+                for i := range clients {
+                    clients[i].conn.Write([]byte("start"))
+                    isFull = true
+                }
             }
         }
     }
@@ -71,7 +76,7 @@ func (s *Server) handleConnection(conn net.Conn) {
         if err != nil {
             return
         }
-        fmt.Println(string(buf[:n]))
+        fmt.Println("Client a écrit : " + string(buf[:n]))
     }
 }
 

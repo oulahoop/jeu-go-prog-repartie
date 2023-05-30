@@ -17,7 +17,7 @@ package main
 
 import (
 	"time"
-
+    "fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
@@ -30,6 +30,7 @@ func (g *Game) HandleWelcomeScreen() bool {
 
 // HandleWaitForPlayers waits for the players to join the server
 func (g *Game) HandleWaitForPlayers() bool {
+    return g.stateServer == 4
 }
 
 // ChooseRunners loops over all the runners to check which sprite each
@@ -120,17 +121,19 @@ func (g *Game) Update() error {
 		if done {
 			g.state++
 		}
-	case StateWaitForPlayers:
-	    done := g.HandleWaitForPlayers()
-        if done {
-            g.state++
-        }
 	case StateChooseRunner:
 		done := g.ChooseRunners()
 		if done {
 			g.UpdateAnimation()
+            go g.ConnectToServer()
+            fmt.Println("Connected to server")
 			g.state++
 		}
+    case StateWaitForPlayers:
+        done := g.HandleWaitForPlayers()
+        if done {
+            g.state++
+        }
 	case StateLaunchRun:
 		done := g.HandleLaunchRun()
 		if done {
@@ -141,6 +144,7 @@ func (g *Game) Update() error {
 		finished := g.CheckArrival()
 		g.UpdateAnimation()
 		if finished {
+		    g.SendResults()
 			g.state++
 		}
 	case StateResult:
