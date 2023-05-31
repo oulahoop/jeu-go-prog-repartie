@@ -16,10 +16,9 @@
 package main
 
 import (
-	"time"
-    "fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"time"
 )
 
 // HandleWelcomeScreen waits for the player to push SPACE in order to
@@ -29,8 +28,8 @@ func (g *Game) HandleWelcomeScreen() bool {
 }
 
 // HandleWaitForPlayers waits for the players to join the server
-func (g *Game) HandleWaitForPlayers() bool {
-    return g.stateServer == 4
+func (g *Game) HandleWaitForConnexion() bool {
+    return g.stateServer == 1
 }
 
 // ChooseRunners loops over all the runners to check which sprite each
@@ -45,6 +44,10 @@ func (g *Game) ChooseRunners() (done bool) {
 		}
 	}
 	return done
+}
+
+func (g *Game) HandleWaitForPlayers() bool {
+    return g.stateServer == 2
 }
 
 // HandleLaunchRun countdowns to the start of a run
@@ -96,6 +99,10 @@ func (g *Game) UpdateAnimation() {
 	}
 }
 
+func (g *Game) HandleWaitForResults() bool {
+    return g.stateServer == 3
+}
+
 // HandleResults computes the resuls of a run and prepare them for
 // being displayed
 func (g *Game) HandleResults() bool {
@@ -119,21 +126,26 @@ func (g *Game) Update() error {
 	case StateWelcomeScreen:
 		done := g.HandleWelcomeScreen()
 		if done {
+		    go g.ConnectToServer()
 			g.state++
 		}
+	case StateWaitForConnexion:
+	    done := g.HandleWaitForConnexion()
+	    if done {
+	        g.state++
+        }
 	case StateChooseRunner:
 		done := g.ChooseRunners()
 		if done {
 			g.UpdateAnimation()
-            go g.ConnectToServer()
-            fmt.Println("Connected to server")
+			go g.SendRunner()
 			g.state++
 		}
-    case StateWaitForPlayers:
-        done := g.HandleWaitForPlayers()
-        if done {
-            g.state++
-        }
+	case StateWaitForRunner:
+		done := g.HandleWaitForPlayers()
+		if done {
+			g.state++
+		}
 	case StateLaunchRun:
 		done := g.HandleLaunchRun()
 		if done {
@@ -144,9 +156,14 @@ func (g *Game) Update() error {
 		finished := g.CheckArrival()
 		g.UpdateAnimation()
 		if finished {
-		    g.SendResults()
+			g.SendResults()
 			g.state++
 		}
+	case StateWaitForResults:
+	    done := g.HandleWaitForResults()
+	    if done {
+	        g.state++
+        }
 	case StateResult:
 		done := g.HandleResults()
 		if done {

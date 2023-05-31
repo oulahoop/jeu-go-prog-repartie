@@ -32,10 +32,12 @@ type Game struct {
 // These constants define the five possible states of the game
 const (
 	StateWelcomeScreen int = iota // Title screen
+	StateWaitForConnexion         // Waiting for other players
 	StateChooseRunner             // Player selection screen
-	StateWaitForPlayers           // Waiting for other players
+	StateWaitForRunner            // Waiting for other players
 	StateLaunchRun                // Countdown before a run
 	StateRun                      // Run
+	StateWaitForResults           // Waiting for other players to finish
 	StateResult                   // Results announcement
 )
 
