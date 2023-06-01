@@ -13,12 +13,18 @@ type Client struct {
     conn net.Conn // Connexion avec le serveur
 }
 
+var serverIp string = "localhost:8080"
+
+func setServerIp(ip string) {
+    serverIp = ip
+}
+
 /**
 * Se connecte au serveur
 */
 func (g *Game) ConnectToServer() {
     // Se connecte au serveur sur le port 8080
-    conn, err := net.Dial("tcp", "172.21.65.25:8080")
+    conn, err := net.Dial("tcp", serverIp)
     if err != nil {
         fmt.Println(err)
         return
