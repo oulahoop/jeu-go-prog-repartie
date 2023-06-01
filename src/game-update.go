@@ -67,14 +67,19 @@ func (g *Game) HandleLaunchRun() bool {
 func (g *Game) UpdateRunners() {
 	for i := range g.runners {
 		if i == 0 {
+		    xpos := g.runners[i].xpos
+
 			g.runners[i].ManualUpdate()
+
+			if xpos != g.runners[i].xpos {
+			    g.SendPosition()
+			}
 		} else {
-			g.runners[i].RandomUpdate()
 		}
 	}
 }
 
-// CheckArrival loops over all the runners to check which ones are arrived
+// CheckArrival loops over all t he runners to check which ones are arrived
 func (g *Game) CheckArrival() (finished bool) {
 	finished = true
 	for i := range g.runners {
@@ -168,7 +173,9 @@ func (g *Game) Update() error {
 		done := g.HandleResults()
 		if done {
 			g.Reset()
-			g.state = StateLaunchRun
+			g.state = StateWaitForRunner
+			g.RestartGame()
+			g.stateServer = 1
 		}
 	}
 	return nil

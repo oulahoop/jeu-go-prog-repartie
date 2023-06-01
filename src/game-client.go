@@ -66,6 +66,8 @@ func (g *Game) handleConnection() {
         switch split[0] {
             case "state":
                 g.UpdateState(split[1])
+            case "position":
+                g.RetrievePosition(split[1])
         }
     }
 }
@@ -81,6 +83,11 @@ func (g *Game) UpdateState(content string) {
             g.RetrieveSkins(content)
             g.stateServer = 2
             fmt.Println("stateServer = 2")
+        case 2: // Fin de la partie
+            // Enregistrement des temps
+            g.RetrieveTemps(content)
+            g.stateServer = 3
+            fmt.Println("stateServer = 3")
     }
 }
 
@@ -145,6 +152,44 @@ func (g *Game) RetrieveTemps(temps string) {
     }
 }
 
+func (g *Game) RetrievePosition(positions string) {
+    // pos = "addr:port-posX;addr:port-posX;..."
+    client := g.Client
+    split := strings.Split(positions, ";")
+    index := 1
+
+    for i := range split {
+        if (split[i] == "") {
+            continue
+        }
+        split2 := strings.Split(split[i], "-")
+        addr := split2[0]
+        posX, err := strconv.ParseFloat(split2[1], 64)
+
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+
+        fmt.Println("addr: " + addr + " = " + client.conn.LocalAddr().String())
+        if (addr == client.conn.LocalAddr().String()) {
+            // On ne modifie pas la position du joueur local
+        } else {
+            g.runners[index].xpos = posX
+            fmt.Println(fmt.Sprintf("%f", g.runners[index].xpos))
+            index++
+        }
+    }
+}
+
+func (g *Game) SendPosition() {
+    // Envoie au serveur la position du joueur
+    _, err := g.Client.conn.Write([]byte("position::" + fmt.Sprintf("%f", g.runners[0].xpos) + "\n"))
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+}
 
 /**
 * Envoie le temps réalisé au serveur
@@ -158,4 +203,13 @@ func (g *Game) SendResults() {
 
     // Envoie le temps au serveur
     g.Client.conn.Write([]byte("temps::" + msString + "\n"))
+}
+
+func (g *Game) RestartGame() {
+    // Envoie au serveur le choix du personnage
+    _, err := g.Client.conn.Write([]byte("restart\n"))
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
 }

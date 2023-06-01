@@ -13,6 +13,7 @@ type Client struct {
     conn net.Conn // Connexion avec le serveur
     temps int     // Temps du client
     runner int    // Skin du client
+    posX float64  // Position X du client
 }
 
 // Server is the main structure for the server
@@ -31,8 +32,10 @@ const (
     course
     score
 )
-
 var state GameState = connexion
+
+const nbClients int = 4
+const posXDepart float64 = 50.0
 
 // NewServer creates a new server
 func NewServer(port string) *Server {
@@ -70,7 +73,7 @@ func (s *Server) Run() error {
             fmt.Println("New client")
 
             // On crée un nouveau client
-            client:= Client{conn: conn, temps: -1, runner: -1}
+            client:= Client{conn: conn, temps: -1, runner: -1, posX: posXDepart}
             // On affiche l'adresse du client
             fmt.Println(conn.RemoteAddr().String())
 
@@ -117,12 +120,16 @@ func (s *Server) handleConnection(client Client) {
         str := strings.Split(string(buf[:n]), "\n")[0]
         split := strings.Split(str, "::")
 
+        // En fonction du type de message on appelle la fonction correspondante
         switch split[0] {
             case "runner": // State ChoixPersos
                 saveRunner(client, split[1])
             case "temps": // State Course
                 saveTemps(client, split[1])
-            case "":
+            case "restart":
+                saveRestart(client)
+            case "position":
+                savePosition(client, split[1])
         }
     }
 }
@@ -173,16 +180,50 @@ func saveTemps(client Client, temps string) {
         }
     }
 
-
     // Si tous les clients on un temps alors on envoie les temps aux clients
     if allClientsHaveTemps() {
         sendTemps()
     }
 }
 
+func saveRestart(client Client) {
+    addr := client.conn.RemoteAddr().String()
+
+    // On reset
+    for i := range clients {
+        if clients[i].conn.RemoteAddr().String() == addr {
+            clients[i].temps = -1
+            clients[i].posX = posXDepart // Position de départ
+        }
+    }
+    // On envoie le restart à tout le monde si tout le monde à restart
+    if allClientsHaveRestart() {
+        sendRestart()
+    }
+}
+
+func savePosition(client Client, position string) {
+    addr := client.conn.RemoteAddr().String()
+    posXFloat, err := strconv.ParseFloat(position, 64)
+
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+
+    for i := range clients {
+        if clients[i].conn.RemoteAddr().String() == addr {
+            clients[i].posX = posXFloat
+        }
+    }
+
+    // Envoie la position à tout le monde
+    sendPosition()
+}
+
 func allClientsHaveTemps() bool {
     for i := range clients {
-        if clients[i].temps == -1 {
+        if clients[i].temps == -1 && clients[i].runner != -1 {
             return false
         }
     }
@@ -192,6 +233,15 @@ func allClientsHaveTemps() bool {
 func allClientsHaveRunner() bool {
     for i := range clients {
         if clients[i].runner == -1 {
+            return false
+        }
+    }
+    return true
+}
+
+func allClientsHaveRestart() bool {
+    for i := range clients {
+        if clients[i].temps != -1 && clients[i].posX != posXDepart {
             return false
         }
     }
@@ -215,11 +265,27 @@ func sendRunners() {
         str += clients[i].conn.RemoteAddr().String() + "-" + strconv.Itoa(clients[i].runner) + ";"
     }
 
-    fmt.Println(str)
-
     // On passe à l'état suivant
     sendNextState(str)
 }
+
+func sendPosition() {
+    str := ""
+
+    for i := range clients {
+        str += clients[i].conn.RemoteAddr().String() + "-" + fmt.Sprintf("%f",clients[i].posX) + ";"
+    }
+
+    for i := range clients {
+        sendMessage(clients[i], "position::" + str)
+    }
+}
+
+func sendRestart() {
+    // On passe à l'état suivant
+    sendNextState("")
+}
+
 
 // Envoie l'état actuel aux clients
 func sendNextState(content string) {
@@ -230,6 +296,11 @@ func sendNextState(content string) {
 
     for i := range clients {
         sendMessage(clients[i], "state::" + content)
+    }
+
+    // Si on est à l'état des résultats on revient à l'état de connexion
+    if state == score {
+        state = choixPersos
     }
 }
 
