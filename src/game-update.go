@@ -38,9 +38,14 @@ func (g *Game) ChooseRunners() (done bool) {
 	done = true
 	for i := range g.runners {
 		if i == 0 {
+		    currentChoose := g.runners[i].colorScheme
 			done = g.runners[i].ManualChoose() && done
+
+			if currentChoose != g.runners[i].colorScheme {
+			    g.SendDeplacementMenuRunner()
+            }
 		} else {
-			done = g.runners[i].RandomChoose() && done
+			//done = g.runners[i].RandomChoose() && done
 		}
 	}
 	return done
@@ -142,13 +147,13 @@ func (g *Game) Update() error {
 	case StateChooseRunner:
 		done := g.ChooseRunners()
 		if done {
-			g.UpdateAnimation()
 			go g.SendRunner()
 			g.state++
 		}
 	case StateWaitForRunner:
 		done := g.HandleWaitForPlayers()
 		if done {
+            g.UpdateAnimation()
 			g.state++
 		}
 	case StateLaunchRun:
