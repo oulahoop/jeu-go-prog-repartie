@@ -27,6 +27,7 @@ type Game struct {
 	getTPS      bool          // Help for debug
 	Client      *Client       // Client for the network game
 	stateServer int           // State of the server
+	joueurPret  int           // Number of players ready
 }
 
 // These constants define the five possible states of the game

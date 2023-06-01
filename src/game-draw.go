@@ -41,7 +41,7 @@ func (g *Game) DrawWelcomeScreen(screen *ebiten.Image) {
 func (g *Game) DrawWaitForPlayers(screen *ebiten.Image) {
 	ebitenutil.DebugPrintAt(
 		screen,
-		fmt.Sprint("Waiting for players... (", g.stateServer, "/4)"),
+		fmt.Sprint("Waiting for players... (", g.joueurPret, "/4)"),
 		screenWidth/2-60,
 		screenHeight/2-20,
 	)
@@ -89,7 +89,7 @@ func (g *Game) DrawRun(screen *ebiten.Image, drawChrono bool) {
 func (g *Game) DrawWaitForResults(screen *ebiten.Image) {
     ebitenutil.DebugPrintAt(
         screen,
-        fmt.Sprint("Waiting other player to finish the run..."),
+        fmt.Sprint("Waiting other player to finish the run... (", g.joueurPret ,"/4)"),
         screenWidth/2-60,
         screenHeight/2-20,
     )

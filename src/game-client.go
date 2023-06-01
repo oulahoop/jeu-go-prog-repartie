@@ -68,6 +68,9 @@ func (g *Game) handleConnection() {
                 g.UpdateState(split[1])
             case "position":
                 g.RetrievePosition(split[1])
+            case "nbClientsPrets":
+                joueurPret, _ := strconv.Atoi(split[1])
+                g.joueurPret = joueurPret
         }
     }
 }
@@ -163,7 +166,13 @@ func (g *Game) RetrievePosition(positions string) {
             continue
         }
         split2 := strings.Split(split[i], "-")
+
+        if (len(split2) < 2) {
+            continue
+        }
+
         addr := split2[0]
+        fmt.Println("split = " + positions)
         posX, err := strconv.ParseFloat(split2[1], 64)
 
         if err != nil {

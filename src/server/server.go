@@ -84,9 +84,11 @@ func (s *Server) Run() error {
             clients = append(clients, client)
 
             // Si la partie est full après l'ajout du client
-            if (len(clients) == 4) {
+            if (len(clients) == nbClients) {
                 // Alors on start le jeu
                 sendNextState("")
+            } else {
+                sendNbClientPrets()
             }
         }
 
@@ -157,6 +159,8 @@ func saveRunner(client Client, content string) {
     // Si tous les clients on un runner alors on envoie les runners aux clients
     if allClientsHaveRunner() {
         sendRunners()
+    } else {
+        sendNbClientPrets()
     }
 }
 
@@ -183,6 +187,8 @@ func saveTemps(client Client, temps string) {
     // Si tous les clients on un temps alors on envoie les temps aux clients
     if allClientsHaveTemps() {
         sendTemps()
+    } else {
+        sendNbClientPrets()
     }
 }
 
@@ -199,6 +205,8 @@ func saveRestart(client Client) {
     // On envoie le restart à tout le monde si tout le monde à restart
     if allClientsHaveRestart() {
         sendRestart()
+    } else {
+        sendNbClientPrets()
     }
 }
 
@@ -301,6 +309,29 @@ func sendNextState(content string) {
     // Si on est à l'état des résultats on revient à l'état de connexion
     if state == score {
         state = choixPersos
+    }
+}
+
+func sendNbClientPrets() {
+    nbClientsPrets := 0
+
+    for i := range clients {
+        switch state {
+            case connexion:
+                nbClientsPrets++
+            case choixPersos:
+                if clients[i].runner != -1 && clients[i].temps == -1 {
+                    nbClientsPrets++
+                }
+            case course:
+                if clients[i].temps != -1 {
+                    nbClientsPrets++
+                }
+        }
+    }
+
+    for i := range clients {
+        sendMessage(clients[i], "nbClientsPrets::" + strconv.Itoa(nbClientsPrets))
     }
 }
 
