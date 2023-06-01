@@ -39,9 +39,18 @@ func (g *Game) DrawWelcomeScreen(screen *ebiten.Image) {
 
 // DrawWaitForPlayers displays the waiting screen in the game window
 func (g *Game) DrawWaitForPlayers(screen *ebiten.Image) {
+
+	var waitingText string
+
+	if g.joueurPret > 0 {
+		waitingText = fmt.Sprintf("Waiting for players... (%d/4)", g.joueurPret)
+	} else {
+		waitingText = "Connection failed"
+	}
+
 	ebitenutil.DebugPrintAt(
 		screen,
-		fmt.Sprint("Waiting for players... (", g.joueurPret, "/4)"),
+		fmt.Sprint(waitingText),
 		screenWidth/2-60,
 		screenHeight/2-20,
 	)
@@ -87,12 +96,12 @@ func (g *Game) DrawRun(screen *ebiten.Image, drawChrono bool) {
 
 // DrawWaitForResults displays the waiting screen in the game window
 func (g *Game) DrawWaitForResults(screen *ebiten.Image) {
-    ebitenutil.DebugPrintAt(
-        screen,
-        fmt.Sprint("Waiting other player to finish the run... (", g.joueurPret ,"/4)"),
-        screenWidth/2-60,
-        screenHeight/2-20,
-    )
+	ebitenutil.DebugPrintAt(
+		screen,
+		fmt.Sprint("Waiting other player to finish the run... (", g.joueurPret, "/4)"),
+		screenWidth/2-60,
+		screenHeight/2-20,
+	)
 }
 
 // DrawResult displays the results of the run in the game window
@@ -139,15 +148,15 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.DrawWaitForPlayers(screen)
 	case StateChooseRunner:
 		g.DrawSelectScreen(screen)
-    case StateWaitForRunner:
-        g.DrawWaitForPlayers(screen)
+	case StateWaitForRunner:
+		g.DrawWaitForPlayers(screen)
 	case StateLaunchRun:
 		g.DrawLaunch(screen)
 		g.DrawRun(screen, false)
 	case StateRun:
 		g.DrawRun(screen, true)
-    case StateWaitForResults:
-        g.DrawWaitForResults(screen)
+	case StateWaitForResults:
+		g.DrawWaitForResults(screen)
 	case StateResult:
 		g.DrawResult(screen)
 		g.DrawRun(screen, false)
