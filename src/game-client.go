@@ -13,12 +13,18 @@ type Client struct {
     conn net.Conn // Connexion avec le serveur
 }
 
+var serverIp string = "localhost:8080"
+
+func setServerIp(ip string) {
+    serverIp = ip
+}
+
 /**
 * Se connecte au serveur
 */
 func (g *Game) ConnectToServer() {
     // Se connecte au serveur sur le port 8080
-    conn, err := net.Dial("tcp", "localhost:8080")
+    conn, err := net.Dial("tcp", serverIp)
     if err != nil {
         fmt.Println(err)
         return
@@ -37,7 +43,6 @@ func (g *Game) SendRunner() {
     // Envoie au serveur le choix du personnage
     runner := g.runners[0].colorScheme
 
-    fmt.Println("runner::" + strconv.Itoa(runner))
     _, err := g.Client.conn.Write([]byte("runner::" + strconv.Itoa(runner) + "\n"))
     if err != nil {
         fmt.Println(err)
@@ -46,23 +51,26 @@ func (g *Game) SendRunner() {
 }
 
 /**
-* Attend les messages du serveur
+* Ecoute les messages du serveur
 */
 func (g *Game) handleConnection() {
     for {
+        // Récupération du message du serveur
         buf := make([]byte, 1024)
         n, err := g.Client.conn.Read(buf)
         if err != nil {
             return
         }
 
+        // Protocole : "type::content\n"
         value := string(buf[:n])
-
         split := strings.Split(value, "\n")
         split = strings.Split(split[0], "::")
 
+        // Affichage du message reçu
         fmt.Println("Received: " + split[0] + " - " + split[1])
 
+        // En fonction du type de message on appelle la fonction correspondante
         switch split[0] {
             case "state":
                 g.UpdateState(split[1])
@@ -71,6 +79,8 @@ func (g *Game) handleConnection() {
             case "nbClientsPrets":
                 joueurPret, _ := strconv.Atoi(split[1])
                 g.joueurPret = joueurPret
+            case "deplacementMenuRunner" :
+                g.RetrieveDeplacementMenuRunner(split[1])
         }
     }
 }
@@ -85,12 +95,10 @@ func (g *Game) UpdateState(content string) {
             // Enregistrement des skins choisis
             g.RetrieveSkins(content)
             g.stateServer = 2
-            fmt.Println("stateServer = 2")
         case 2: // Fin de la partie
             // Enregistrement des temps
             g.RetrieveTemps(content)
             g.stateServer = 3
-            fmt.Println("stateServer = 3")
     }
 }
 
@@ -104,7 +112,6 @@ func (g *Game) RetrieveSkins(skins string) {
             continue
         }
 
-        fmt.Println("split[i] = " + split[i])
         split2 := strings.Split(split[i], "-")
         addr := split2[0]
         skin, err := strconv.Atoi(split2[1])
@@ -114,7 +121,6 @@ func (g *Game) RetrieveSkins(skins string) {
             return
         }
 
-        fmt.Println("addr: " + addr + " = " + client.conn.LocalAddr().String())
         if (addr == client.conn.LocalAddr().String()) {
             g.runners[0].colorScheme = skin
         } else {
@@ -142,14 +148,11 @@ func (g *Game) RetrieveTemps(temps string) {
             return
         }
 
-        fmt.Println("addr: " + addr + " = " + client.conn.LocalAddr().String())
         if (addr == client.conn.LocalAddr().String()) {
             // Convertis tempsInt (qui est en MS) en Duration
             g.runners[0].runTime = time.Duration(tempsInt) * time.Millisecond
-            fmt.Println("Player 0 time is " + strconv.Itoa(int(g.runners[0].runTime.Milliseconds())))
         } else {
             g.runners[index].runTime = time.Duration(tempsInt) * time.Millisecond
-            fmt.Println("Player " + strconv.Itoa(index) + " time is " + strconv.Itoa(int(g.runners[index].runTime.Milliseconds())))
             index++
         }
     }
@@ -172,7 +175,6 @@ func (g *Game) RetrievePosition(positions string) {
         }
 
         addr := split2[0]
-        fmt.Println("split = " + positions)
         posX, err := strconv.ParseFloat(split2[1], 64)
 
         if err != nil {
@@ -180,12 +182,10 @@ func (g *Game) RetrievePosition(positions string) {
             return
         }
 
-        fmt.Println("addr: " + addr + " = " + client.conn.LocalAddr().String())
         if (addr == client.conn.LocalAddr().String()) {
             // On ne modifie pas la position du joueur local
         } else {
             g.runners[index].xpos = posX
-            fmt.Println(fmt.Sprintf("%f", g.runners[index].xpos))
             index++
         }
     }
@@ -217,6 +217,45 @@ func (g *Game) SendResults() {
 func (g *Game) RestartGame() {
     // Envoie au serveur le choix du personnage
     _, err := g.Client.conn.Write([]byte("restart\n"))
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+}
+
+func (g *Game) RetrieveDeplacementMenuRunner(content string) {
+    // content = "addr:port-preselection;addr:port-preselection;..."
+    clientAddr := g.Client.conn.LocalAddr().String()
+    index := 1
+
+    split := strings.Split(content, "\n")
+    split = strings.Split(split[0], ";")
+
+    for i := range split {
+        if (split[i] == "") {
+            continue
+        }
+
+        split2 := strings.Split(split[i], "-")
+        addr := split2[0]
+        preselection, err := strconv.Atoi(split2[1])
+
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+
+        if (addr != clientAddr) {
+            g.runners[index].colorScheme = preselection
+            index++;
+        }
+    }
+
+}
+
+func (g *Game) SendDeplacementMenuRunner() {
+    // Envoie au serveur le choix du personnage
+    _, err := g.Client.conn.Write([]byte("deplacementMenuRunner::" + strconv.Itoa(g.runners[0].colorScheme) + "\n"))
     if err != nil {
         fmt.Println(err)
         return

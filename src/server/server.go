@@ -4,16 +4,16 @@ import (
     "fmt"
     "strings"
     "strconv"
-    "reflect"
     "net"
 )
 
 // Client is the main structure for the client
 type Client struct {
-    conn net.Conn // Connexion avec le serveur
-    temps int     // Temps du client
-    runner int    // Skin du client
-    posX float64  // Position X du client
+    conn net.Conn       // Connexion avec le serveur
+    temps int           // Temps du client
+    runner int          // Skin du client
+    runnerSelection int // Skin client préselectionné
+    posX float64        // Position X du client
 }
 
 // Server is the main structure for the server
@@ -70,12 +70,11 @@ func (s *Server) Run() error {
             if err != nil {
                 return err
             }
-            fmt.Println("New client")
 
             // On crée un nouveau client
             client:= Client{conn: conn, temps: -1, runner: -1, posX: posXDepart}
             // On affiche l'adresse du client
-            fmt.Println(conn.RemoteAddr().String())
+            fmt.Println("New client : " + conn.RemoteAddr().String())
 
             // On lance la goroutine qui va récupérer et gérer les messages du client
             go s.handleConnection(client)
@@ -116,7 +115,7 @@ func (s *Server) handleConnection(client Client) {
         }
 
         // On affiche le message du client
-        fmt.Println("Client " + addr + " a écrit : " + string(buf[:n]))
+        fmt.Print(addr + " a écrit : " + string(buf[:n]))
 
         // On split le message en deux parties (séparées par "::")
         str := strings.Split(string(buf[:n]), "\n")[0]
@@ -124,6 +123,8 @@ func (s *Server) handleConnection(client Client) {
 
         // En fonction du type de message on appelle la fonction correspondante
         switch split[0] {
+            case "deplacementMenuRunner" : //
+                deplacementMenuRunner(client, split[1])
             case "runner": // State ChoixPersos
                 saveRunner(client, split[1])
             case "temps": // State Course
@@ -136,23 +137,29 @@ func (s *Server) handleConnection(client Client) {
     }
 }
 
+func deplacementMenuRunner(client Client, content string) {
+    addr := client.conn.RemoteAddr().String()
+    runnerSelection, _ := strconv.Atoi(content)
+
+    for i := range clients {
+        if clients[i].conn.RemoteAddr().String() == addr {
+            clients[i].runnerSelection = runnerSelection
+        }
+    }
+    sendRunnerSelection()
+}
+
 func saveRunner(client Client, content string) {
     addr := client.conn.RemoteAddr().String()
     runner, err := strconv.Atoi(content)
-    fmt.Println("Client " + addr + " a choisi le runner " + content)
     if err != nil {
         fmt.Println(err)
         return
     }
 
-    // Affichage du runner et du type de runner
-    fmt.Println(runner)
-    fmt.Println(reflect.TypeOf(runner))
-
     for i := range clients {
         if clients[i].conn.RemoteAddr().String() == addr {
             clients[i].runner = runner
-            fmt.Println("Client " + addr + " a choisi le runner " + string(client.runner))
         }
     }
 
@@ -167,20 +174,15 @@ func saveRunner(client Client, content string) {
 func saveTemps(client Client, temps string) {
     addr := client.conn.RemoteAddr().String()
     tempsInt, err := strconv.Atoi(temps)
-    fmt.Println("Client " + addr + " a fini en " + temps)
+    fmt.Println(addr + " a fini en " + temps)
     if err != nil {
         fmt.Println(err)
         return
     }
 
-    // Affichage du temps et du type de tempsInt
-    fmt.Println(tempsInt)
-    fmt.Println(reflect.TypeOf(tempsInt))
-
     for i := range clients {
         if clients[i].conn.RemoteAddr().String() == addr {
             clients[i].temps = tempsInt
-            fmt.Println("Client " + addr + " a fini en " + string(client.temps))
         }
     }
 
@@ -289,6 +291,18 @@ func sendPosition() {
     }
 }
 
+func sendRunnerSelection() {
+    str := ""
+
+    for i := range clients {
+        str += clients[i].conn.RemoteAddr().String() + "-" + strconv.Itoa(clients[i].runnerSelection) + ";"
+    }
+
+    for i := range clients {
+        sendMessage(clients[i], "deplacementMenuRunner::" + str)
+    }
+}
+
 func sendRestart() {
     // On passe à l'état suivant
     sendNextState("")
@@ -299,8 +313,6 @@ func sendRestart() {
 func sendNextState(content string) {
     // Si tous les clients sont prêts alors on passe à l'état suivant
     state++
-
-    fmt.Println("state::" + content)
 
     for i := range clients {
         sendMessage(clients[i], "state::" + content)

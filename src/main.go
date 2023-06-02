@@ -21,7 +21,9 @@ const (
 func main() {
 
 	var getTPS bool
+	var serverIp string
 	flag.BoolVar(&getTPS, "tps", false, "Afficher le nombre d'appel à Update par seconde")
+	flag.StringVar(&serverIp, "server", "localhost:8080", "Adresse du serveur")
 	flag.Parse()
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
@@ -29,6 +31,7 @@ func main() {
 
 	g := InitGame()
 	g.getTPS = getTPS
+    setServerIp(serverIp)
 
 	err := ebiten.RunGame(&g)
 	log.Print(err)
