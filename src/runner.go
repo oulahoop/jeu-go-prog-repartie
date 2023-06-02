@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"image"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -166,5 +167,14 @@ func (r *Runner) DrawSelection(screen *ebiten.Image, xStep, playerNum int) {
 		yMod = -62
 	}
 	yPos := (screenHeight + yMod) / 2
-	ebitenutil.DebugPrintAt(screen, fmt.Sprint("P", playerNum), xPos, yPos)
+
+	var playerName string
+
+	if playerNum == 0 {
+		playerName = "YOU"
+	} else {
+		playerName = "P" + strconv.Itoa(playerNum)
+	}
+
+	ebitenutil.DebugPrintAt(screen, fmt.Sprint(playerName), xPos, yPos)
 }

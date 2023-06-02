@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -122,7 +123,16 @@ func (g *Game) DrawResult(screen *ebiten.Image) {
 
 	for i := 1; i < g.resultStep && i <= 4; i++ {
 		s, ms := GetSeconds(g.runners[ranking[i-1]].runTime.Milliseconds())
-		ebitenutil.DebugPrintAt(screen, fmt.Sprint(i, ". P", ranking[i-1], "     ", s, ":", ms), screenWidth/2-40, 55+ranking[i-1]*20)
+
+		var playerName string
+
+		if ranking[i-1] == 0 {
+			playerName = "YOU"
+		} else {
+			playerName = "P" + strconv.Itoa(ranking[i-1])
+		}
+
+		ebitenutil.DebugPrintAt(screen, fmt.Sprint(i, ". ", playerName, "     ", s, ":", ms), screenWidth/2-40, 55+ranking[i-1]*20)
 	}
 
 	if g.resultStep > 4 {
