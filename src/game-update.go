@@ -116,7 +116,7 @@ func (g *Game) HandleWaitForResults() bool {
 // HandleResults computes the resuls of a run and prepare them for
 // being displayed
 func (g *Game) HandleResults() bool {
-	if time.Since(g.f.chrono).Milliseconds() > 1000 || inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+	if time.Since(g.f.chrono).Milliseconds() > 1000 {
 		g.resultStep++
 		g.f.chrono = time.Now()
 	}
@@ -166,6 +166,8 @@ func (g *Game) Update() error {
 		finished := g.CheckArrival()
 		g.UpdateAnimation()
 		if finished {
+		    // On attend un peu car le joueur peut quand même bouger après avoir fini
+			time.Sleep(100 * time.Millisecond)
 			g.SendResults()
 			g.state++
 		}

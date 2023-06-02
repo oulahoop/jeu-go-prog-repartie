@@ -49,7 +49,10 @@ func (s *Server) Start() error {
     if err != nil {
         return err
     }
-    fmt.Println("Server started on 127.0.0.1" + s.port)
+
+    // Affiche l'ip du server
+    fmt.Println("Server listening on localhost" + s.port)
+
     return nil
 }
 
@@ -330,12 +333,15 @@ func sendNbClientPrets() {
     for i := range clients {
         switch state {
             case connexion:
+                // print
                 nbClientsPrets++
             case choixPersos:
+                // print
                 if clients[i].runner != -1 && clients[i].temps == -1 {
                     nbClientsPrets++
                 }
             case course:
+                // print
                 if clients[i].temps != -1 {
                     nbClientsPrets++
                 }
