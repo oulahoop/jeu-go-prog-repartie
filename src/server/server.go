@@ -349,7 +349,7 @@ func sendNbClientPrets() {
     }
 
     for i := range clients {
-        sendMessage(clients[i], "nbClientsPrets::" + strconv.Itoa(nbClientsPrets))
+        sendMessage(clients[i], "nbClientsPrets::" + strconv.Itoa(nbClientsPrets) + "\n")
     }
 }
 

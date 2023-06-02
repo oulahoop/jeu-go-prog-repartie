@@ -166,8 +166,6 @@ func (g *Game) Update() error {
 		finished := g.CheckArrival()
 		g.UpdateAnimation()
 		if finished {
-		    // On attend un peu car le joueur peut quand même bouger après avoir fini
-			time.Sleep(100 * time.Millisecond)
 			g.SendResults()
 			g.state++
 		}
