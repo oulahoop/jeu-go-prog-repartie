@@ -147,10 +147,14 @@ func (r *Runner) Reset(f *Field) {
 }
 
 // Draw draws a runner on screen at the good position (defined by xpos and ypos)
-func (r *Runner) Draw(screen *ebiten.Image) {
+func (r *Runner) Draw(screen *ebiten.Image, playerNum int) {
 	options := &ebiten.DrawImageOptions{}
 	options.GeoM.Translate(r.xpos-16, r.ypos-16)
 	screen.DrawImage(r.image, options)
+
+	if playerNum == 0 {
+		ebitenutil.DebugPrintAt(screen, fmt.Sprint("YOU"), int(r.xpos-10), int(r.ypos-30))
+	}
 }
 
 // DrawSelection draws the current selection of a runner appearance for the

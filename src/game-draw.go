@@ -91,7 +91,7 @@ func (g *Game) DrawLaunch(screen *ebiten.Image) {
 func (g *Game) DrawRun(screen *ebiten.Image, drawChrono bool) {
 	g.f.Draw(screen, drawChrono)
 	for i := range g.runners {
-		g.runners[i].Draw(screen)
+		g.runners[i].Draw(screen, i)
 	}
 }
 
